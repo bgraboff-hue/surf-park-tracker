@@ -1,8 +1,49 @@
 {
-  "scrapes": [],
+  "scrapes": [
+    {
+      "park_id": "atlantic",
+      "park_name": "Atlantic Park Surf",
+      "location": "Virginia Beach, VA",
+      "tech": "Wavegarden Cove",
+      "timestamp": "2026-02-16T18:34:10.968093+00:00",
+      "prices_usd": {
+        "intermediate": 109.0,
+        "advanced": 123.0
+      },
+      "source_url": "https://booking.atlanticparksurf.com/store"
+    },
+    {
+      "park_id": "lostshore",
+      "park_name": "Lost Shore Surf Resort",
+      "location": "Edinburgh, UK",
+      "tech": "Wavegarden Cove",
+      "timestamp": "2026-02-16T18:34:10.968093+00:00",
+      "prices_usd": {
+        "intermediate": 63.5,
+        "advanced": 76.2,
+        "beginner": 57.15
+      },
+      "source_url": "https://booking.lostshore.com/surf-sessions"
+    },
+    {
+      "park_id": "waco",
+      "park_name": "Waco Surf",
+      "location": "Waco, TX",
+      "tech": "PerfectSwell (AWM)",
+      "timestamp": "2026-02-16T18:34:10.968093+00:00",
+      "prices_usd": {
+        "beginner": 129.0,
+        "intermediate": 129.0,
+        "advanced": 149.0
+      },
+      "source_url": "https://www.wacosurf.com/surf-center/"
+    }
+  ],
   "metadata": {
     "created": "2026-02-16",
-    "project": "Wavegarden Myrtle Beach — Comp Pricing Tracker",
-    "parks_tracked": 8
+    "project": "Wavegarden Myrtle Beach \u2014 Comp Pricing Tracker",
+    "parks_tracked": 8,
+    "last_updated": "2026-02-16T18:34:14.914573+00:00",
+    "total_scrapes": 3
   }
 }

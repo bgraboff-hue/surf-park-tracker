@@ -1,0 +1,111 @@
+{
+  "atlantic": {
+    "park_id": "atlantic",
+    "park_name": "Atlantic Park Surf",
+    "location": "Virginia Beach, VA",
+    "tech": "Wavegarden Cove",
+    "scrape_count": 1,
+    "first_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "last_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "averages": {
+      "intermediate": {
+        "current": 109.0,
+        "running_avg": 109.0,
+        "min": 109.0,
+        "max": 109.0,
+        "data_points": 1
+      },
+      "advanced": {
+        "current": 123.0,
+        "running_avg": 123.0,
+        "min": 123.0,
+        "max": 123.0,
+        "data_points": 1
+      }
+    },
+    "monthly_averages": {
+      "2026-02": {
+        "intermediate": 109.0,
+        "advanced": 123.0
+      }
+    }
+  },
+  "lostshore": {
+    "park_id": "lostshore",
+    "park_name": "Lost Shore Surf Resort",
+    "location": "Edinburgh, UK",
+    "tech": "Wavegarden Cove",
+    "scrape_count": 1,
+    "first_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "last_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "averages": {
+      "beginner": {
+        "current": 57.15,
+        "running_avg": 57.15,
+        "min": 57.15,
+        "max": 57.15,
+        "data_points": 1
+      },
+      "intermediate": {
+        "current": 63.5,
+        "running_avg": 63.5,
+        "min": 63.5,
+        "max": 63.5,
+        "data_points": 1
+      },
+      "advanced": {
+        "current": 76.2,
+        "running_avg": 76.2,
+        "min": 76.2,
+        "max": 76.2,
+        "data_points": 1
+      }
+    },
+    "monthly_averages": {
+      "2026-02": {
+        "beginner": 57.15,
+        "intermediate": 63.5,
+        "advanced": 76.2
+      }
+    }
+  },
+  "waco": {
+    "park_id": "waco",
+    "park_name": "Waco Surf",
+    "location": "Waco, TX",
+    "tech": "PerfectSwell (AWM)",
+    "scrape_count": 1,
+    "first_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "last_scrape": "2026-02-16T18:34:10.968093+00:00",
+    "averages": {
+      "beginner": {
+        "current": 129.0,
+        "running_avg": 129.0,
+        "min": 129.0,
+        "max": 129.0,
+        "data_points": 1
+      },
+      "intermediate": {
+        "current": 129.0,
+        "running_avg": 129.0,
+        "min": 129.0,
+        "max": 129.0,
+        "data_points": 1
+      },
+      "advanced": {
+        "current": 149.0,
+        "running_avg": 149.0,
+        "min": 149.0,
+        "max": 149.0,
+        "data_points": 1
+      }
+    },
+    "monthly_averages": {
+      "2026-02": {
+        "beginner": 129.0,
+        "intermediate": 129.0,
+        "advanced": 149.0
+      }
+    }
+  }
+}
