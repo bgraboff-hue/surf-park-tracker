@@ -1,0 +1,52 @@
+# ============================================================
+# SURF PARK PRICE SCRAPER — Automated GitHub Actions Workflow
+# ============================================================
+# This file tells GitHub to run your scraper automatically.
+# It runs every day at 6:00 AM UTC (1:00 AM Eastern).
+# After scraping, it saves the updated price data back to your repo.
+#
+# You can also trigger it manually anytime from the GitHub website
+# by going to Actions > "Scrape Surf Park Prices" > "Run workflow"
+# ============================================================
+
+name: Scrape Surf Park Prices
+
+on:
+  # Runs automatically every day at 6:00 AM UTC
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Also lets you run it manually from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out your repository files
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install the libraries the scraper needs
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      # Step 4: Run the scraper
+      - name: Run scraper
+        run: python scraper.py
+
+      # Step 5: Save the updated price data back to the repo
+      - name: Commit updated data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add price_history.json price_averages.json
+          git diff --staged --quiet || git commit -m "Auto-scrape: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
