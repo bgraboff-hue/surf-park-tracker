@@ -1,31 +1,21 @@
 """
-SURF PARK PRICING SCRAPER
-=========================
-This script scrapes live pricing from surf park booking pages and stores
-the results in a JSON database file. Run it daily (or weekly) via cron job
-or a cloud scheduler to build a running price history over time.
+SURF PARK PRICING SCRAPER v2.0
+==============================
+Scrapes live pricing from 8 surf park booking pages and stores results
+in a JSON database. Runs daily via GitHub Actions.
 
-HOW IT WORKS:
-1. Visits each park's public booking/pricing page
-2. Extracts session prices from the HTML using patterns specific to each site
-3. Appends a timestamped record to a local JSON file (price_history.json)
-4. The React dashboard reads this JSON to display running averages
+WHAT'S NEW IN v2.0:
+- Added "known price" fallbacks for parks with JS-rendered booking pages
+  (Revel, Palm Springs, SkudinSurf, The Wave, SURFTOWN)
+- These known prices come from published sources (WavePoolMag, park websites,
+  news articles) and are tagged with their source
+- The scraper still TRIES to scrape live prices first — if a park ever
+  switches to server-rendered HTML, it will pick up live data automatically
+- Known prices are flagged as "source: published" vs "source: scraped"
+  so the dashboard can distinguish them
 
-SETUP:
-  pip install requests beautifulsoup4
-  python scraper.py
-
-SCHEDULING (run daily at 6am):
-  Option A - Cron (Linux/Mac):
-    crontab -e
-    0 6 * * * cd /path/to/project && python scraper.py
-
-  Option B - Windows Task Scheduler:
-    Create a task that runs: python C:\\path\\to\\scraper.py
-
-  Option C - Cloud (recommended for always-on):
-    Deploy to Railway, Render, or AWS Lambda with a daily trigger
-    See README.md for step-by-step instructions
+SCHEDULING:
+  Runs via GitHub Actions daily at 6:00 AM UTC (1:00 AM Eastern)
 """
 
 import requests
@@ -39,10 +29,18 @@ from datetime import datetime, timezone
 
 HISTORY_FILE = "price_history.json"
 
-# Each park has a scraping config:
-#   url:      the public booking/pricing page
-#   parser:   which parsing function to use
-#   currency: USD, GBP, or EUR (converted to USD for consistency)
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
+# Approximate exchange rates (update these every few months)
+FX_RATES = {
+    "USD": 1.0,
+    "GBP": 1.27,   # 1 GBP = ~1.27 USD
+    "EUR": 1.09,   # 1 EUR = ~1.09 USD
+}
+
+# ─── PARK DEFINITIONS ────────────────────────────────────────────
 
 PARKS = [
     {
@@ -51,8 +49,9 @@ PARKS = [
         "location": "Virginia Beach, VA",
         "tech": "Wavegarden Cove",
         "url": "https://booking.atlanticparksurf.com/store",
-        "parser": "wave7",        # Atlantic Park uses Wave7 booking platform
+        "parser": "wave7",
         "currency": "USD",
+        "known_prices": None,
     },
     {
         "id": "lostshore",
@@ -60,8 +59,9 @@ PARKS = [
         "location": "Edinburgh, UK",
         "tech": "Wavegarden Cove",
         "url": "https://booking.lostshore.com/surf-sessions",
-        "parser": "wave7",        # Lost Shore also uses Wave7
+        "parser": "wave7",
         "currency": "GBP",
+        "known_prices": None,
     },
     {
         "id": "waco",
@@ -71,24 +71,52 @@ PARKS = [
         "url": "https://www.wacosurf.com/surf-center/",
         "parser": "waco",
         "currency": "USD",
-    },
-    {
-        "id": "palmsprings",
-        "name": "Palm Springs Surf Club",
-        "location": "Palm Springs, CA",
-        "tech": "Surf Loch",
-        "url": "https://www.palmspringssurfclub.com/surf",
-        "parser": "generic_price_scan",
-        "currency": "USD",
+        "known_prices": None,
     },
     {
         "id": "revel",
         "name": "Revel Surf",
         "location": "Mesa, AZ",
         "tech": "SwellMFG + UNIT",
-        "url": "https://www.revelsurf.com/surf",
-        "parser": "generic_price_scan",
+        "url": "https://revelsurf.com/surf-lagoon/",
+        "parser": "revel",
         "currency": "USD",
+        "known_prices": {
+            "beginner": 119.0,
+            "intermediate": 129.0,
+            "advanced": 139.0,
+        },
+        "price_source": "WavePoolMag Nov 2024 + Arizona Republic Feb 2025",
+    },
+    {
+        "id": "palmsprings",
+        "name": "Palm Springs Surf Club",
+        "location": "Palm Springs, CA",
+        "tech": "Surf Loch",
+        "url": "https://palmspringssurfclub.com/surf/",
+        "parser": "palmsprings",
+        "currency": "USD",
+        "known_prices": {
+            "beginner": 100.0,
+            "intermediate": 200.0,
+            "advanced": 200.0,
+        },
+        "price_source": "WavePoolMag + PSSC website 2025",
+    },
+    {
+        "id": "skudin",
+        "name": "SkudinSurf American Dream",
+        "location": "East Rutherford, NJ",
+        "tech": "PerfectSwell (AWM)",
+        "url": "https://skudinsurfamericandream.com/intermediate-sessions/",
+        "parser": "skudin",
+        "currency": "USD",
+        "known_prices": {
+            "beginner": 99.0,
+            "intermediate": 145.0,
+            "advanced": 250.0,
+        },
+        "price_source": "American Surf Magazine Nov 2024 + WavePoolMag",
     },
     {
         "id": "thewave",
@@ -98,119 +126,83 @@ PARKS = [
         "url": "https://www.thewave.com/book-now/",
         "parser": "thewave",
         "currency": "GBP",
-    },
-    {
-        "id": "skudin",
-        "name": "SkudinSurf American Dream",
-        "location": "East Rutherford, NJ",
-        "tech": "PerfectSwell (AWM)",
-        "url": "https://www.skudinsurf.com/american-dream",
-        "parser": "generic_price_scan",
-        "currency": "USD",
+        "known_prices": {
+            "beginner": 57.15,
+            "intermediate": 63.50,
+            "advanced": 69.85,
+        },
+        "price_source": "thewave.com published pricing (GBP converted)",
     },
     {
         "id": "surftown",
         "name": "O2 SURFTOWN MUC",
         "location": "Munich, Germany",
         "tech": "Endless Surf",
-        "url": "https://www.o2surftown.com/en/book",
-        "parser": "generic_price_scan",
+        "url": "https://surftown.de/en/all-products",
+        "parser": "surftown",
         "currency": "EUR",
+        "known_prices": {
+            "beginner": 86.11,
+            "intermediate": 97.01,
+            "advanced": 162.41,
+        },
+        "price_source": "surf-escape.com 2024 + SURFTOWN website (EUR converted)",
     },
 ]
-
-# Approximate exchange rates (update periodically or use a live API)
-FX_RATES = {
-    "USD": 1.0,
-    "GBP": 1.27,   # 1 GBP = ~1.27 USD
-    "EUR": 1.09,   # 1 EUR = ~1.09 USD
-}
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; SurfParkPriceTracker/1.0)"
-}
 
 
 # ─── PARSING FUNCTIONS ────────────────────────────────────────────
 
 def parse_wave7(html, currency):
-    """
-    Parse Wave7 booking platform pages (used by Atlantic Park, Lost Shore).
-    These pages show prices as bold text like "$ 103.00" or "£ 60.00".
-    
-    Returns a dict of session_name -> price_usd
-    """
+    """Parse Wave7 booking platform pages (Atlantic Park, Lost Shore)."""
     soup = BeautifulSoup(html, "html.parser")
     prices = {}
     fx = FX_RATES.get(currency, 1.0)
-    
-    # Wave7 pages have catalog items with titles (h3) and prices (bold text)
-    # Pattern: find all product cards
+
     cards = soup.find_all("h3")
     for card in cards:
         name = card.get_text(strip=True).upper()
-        
-        # Look for the price near this card - Wave7 puts it in a bold or 
-        # "starting from" pattern
         parent = card.find_parent()
         if parent:
-            # Search up a few levels for the price container
             container = parent.find_parent()
             if container is None:
                 container = parent
-            
             text = container.get_text()
-            
-            # Find price patterns: $ 103.00 or £ 60.00 or € 89.00
-            price_matches = re.findall(r'[\$£€]\s*([\d,]+\.?\d*)', text)
+            price_matches = re.findall(r'[\$\xa3\u00a3\u20ac]\s*([\d,]+\.?\d*)', text)
             if price_matches:
                 try:
                     price_local = float(price_matches[0].replace(",", ""))
                     price_usd = round(price_local * fx, 2)
-                    
-                    # Categorize by session level
                     level = categorize_session(name)
-                    if level:
-                        key = f"{level}"
-                        # Keep the lowest price for each level (base price)
-                        if key not in prices or price_usd < prices[key]:
-                            prices[key] = price_usd
+                    if level and 10 < price_usd < 500:
+                        if level not in prices or price_usd < prices[level]:
+                            prices[level] = price_usd
                 except ValueError:
                     continue
-    
-    # If the card-based approach didn't work well, do a broader scan
+
     if len(prices) < 2:
-        all_text = soup.get_text()
-        prices = extract_prices_from_text(all_text, currency)
-    
+        prices = extract_prices_from_text(soup.get_text(), currency)
+
     return prices
 
 
 def parse_waco(html, currency):
-    """
-    Parse Waco Surf's WordPress-based pricing page.
-    Prices appear as "Starts at $129 for 1 hour" in expandable cards.
-    """
+    """Parse Waco Surf's WordPress-based pricing page."""
     soup = BeautifulSoup(html, "html.parser")
     prices = {}
     fx = FX_RATES.get(currency, 1.0)
-    
-    # Look for "Starts at $XX" patterns
     text = soup.get_text()
-    
-    # Find all session blocks - Waco uses h2 headings for session names
+
     headings = soup.find_all("h2")
     for heading in headings:
         name = heading.get_text(strip=True).upper()
         level = categorize_session(name)
         if not level:
             continue
-        
-        # Search the text after this heading for price
         parent = heading.find_parent()
         if parent:
             block_text = parent.get_text()
-            starts_at = re.findall(r'Starts at \$([\d,]+)', block_text)
+            starts_at = re.findall(r'(?:Starts at|from)\s*\$([\d,]+)', block_text, re.IGNORECASE)
             if starts_at:
                 try:
                     price = float(starts_at[0].replace(",", ""))
@@ -219,107 +211,201 @@ def parse_waco(html, currency):
                         prices[level] = price_usd
                 except ValueError:
                     continue
-    
-    # Fallback: broad text scan
+
     if len(prices) < 2:
         prices = extract_prices_from_text(text, currency)
-    
+
+    return prices
+
+
+def parse_revel(html, currency):
+    """Parse Revel Surf's lagoon page."""
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text()
+    prices = {}
+
+    level_prices = re.findall(r'(?:Level\s*[123I]+|Learn to Surf|San O|Malibu|Lowers|V.?Land)[^$]*\$([\d]+)', text, re.IGNORECASE)
+    if level_prices:
+        for i, price_str in enumerate(level_prices):
+            try:
+                price = float(price_str)
+                if 50 < price < 500:
+                    if i == 0:
+                        prices["beginner"] = price
+                    elif i <= 2:
+                        if "intermediate" not in prices:
+                            prices["intermediate"] = price
+                    else:
+                        prices["advanced"] = price
+            except ValueError:
+                continue
+
+    if len(prices) < 2:
+        generic = extract_prices_from_text(text, currency)
+        prices.update({k: v for k, v in generic.items() if k not in prices})
+
+    return prices
+
+
+def parse_palmsprings(html, currency):
+    """Parse Palm Springs Surf Club."""
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text()
+    prices = {}
+
+    for match in re.finditer(r'(beginner|intermediate|advanced|expert)[^$]*\$([\d]+)', text, re.IGNORECASE):
+        level_word = match.group(1).lower()
+        price = float(match.group(2))
+        if 50 < price < 500:
+            level = "beginner" if level_word == "beginner" else ("advanced" if level_word in ["advanced", "expert"] else "intermediate")
+            if level not in prices:
+                prices[level] = price
+
+    if len(prices) < 2:
+        prices = extract_prices_from_text(text, currency)
+
+    return prices
+
+
+def parse_skudin(html, currency):
+    """Parse SkudinSurf American Dream."""
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text()
+    prices = {}
+
+    for match in re.finditer(r'\$([\d]+)\s*(?:per|/)\s*(?:person|session|surfer)', text, re.IGNORECASE):
+        price = float(match.group(1))
+        if 50 < price < 500:
+            if "beginner" not in prices:
+                prices["beginner"] = price
+
+    range_match = re.findall(r'\$([\d]+)\s*(?:to|-)\s*\$([\d]+)', text)
+    if range_match:
+        low = float(range_match[0][0])
+        high = float(range_match[0][1])
+        if 50 < low < 500:
+            prices.setdefault("beginner", low)
+            prices.setdefault("advanced", high)
+            prices.setdefault("intermediate", round((low + high) / 2))
+
+    if len(prices) < 2:
+        prices = extract_prices_from_text(text, currency)
+
     return prices
 
 
 def parse_thewave(html, currency):
-    """
-    Parse The Wave Bristol's booking page.
-    Their ticketing system redirects to a separate domain, so we parse
-    the main book-now page for session descriptions and any listed prices.
-    """
+    """Parse The Wave Bristol's booking page."""
     soup = BeautifulSoup(html, "html.parser")
     prices = {}
     fx = FX_RATES.get(currency, 1.0)
-    
     text = soup.get_text()
-    prices = extract_prices_from_text(text, currency)
-    
+
+    for match in re.finditer(r'\xa3\s*([\d]+(?:\.\d+)?)', text):
+        price_local = float(match.group(1))
+        if 20 < price_local < 200:
+            price_usd = round(price_local * fx, 2)
+            start = max(0, match.start() - 200)
+            context = text[start:match.end()].upper()
+            level = categorize_session(context)
+            if level and (level not in prices or price_usd < prices[level]):
+                prices[level] = price_usd
+
+    if len(prices) < 2:
+        prices = extract_prices_from_text(text, currency)
+
+    return prices
+
+
+def parse_surftown(html, currency):
+    """Parse O2 SURFTOWN MUC product page."""
+    soup = BeautifulSoup(html, "html.parser")
+    prices = {}
+    fx = FX_RATES.get(currency, 1.0)
+    text = soup.get_text()
+
+    for match in re.finditer(r'\u20ac\s*([\d]+(?:[.,]\d+)?)', text):
+        price_str = match.group(1).replace(",", ".")
+        price_local = float(price_str)
+        if 30 < price_local < 300:
+            price_usd = round(price_local * fx, 2)
+            start = max(0, match.start() - 200)
+            context = text[start:match.end()].upper()
+            level = categorize_session(context)
+            if level and (level not in prices or price_usd < prices[level]):
+                prices[level] = price_usd
+
+    if len(prices) < 2:
+        prices = extract_prices_from_text(text, currency)
+
     return prices
 
 
 def parse_generic_price_scan(html, currency):
-    """
-    Generic fallback parser that scans the full page text for price patterns.
-    Works for any site that displays prices on a public page.
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    text = soup.get_text()
-    return extract_prices_from_text(text, currency)
+    """Fallback: scan entire page for price-like patterns."""
+    return extract_prices_from_text(BeautifulSoup(html, "html.parser").get_text(), currency)
 
+
+# ─── SHARED HELPERS ──────────────────────────────────────────────
 
 def extract_prices_from_text(text, currency):
-    """
-    Scan raw text for price patterns and categorize by session level.
-    Returns dict like: {"beginner": 103.0, "intermediate": 118.0, "advanced": 133.0}
-    """
+    """Scan raw text for price patterns and try to categorize them."""
     prices = {}
     fx = FX_RATES.get(currency, 1.0)
-    
-    # Split into lines and look for session-price pairs
-    lines = text.split("\n")
-    
-    for i, line in enumerate(lines):
-        line_upper = line.upper().strip()
-        level = categorize_session(line_upper)
-        
-        if level:
-            # Search this line and the next few lines for a price
-            search_block = " ".join(lines[max(0, i-1):min(len(lines), i+5)])
-            
-            # Match $XXX, £XX, €XX patterns
-            price_matches = re.findall(r'[\$£€]\s*([\d,]+\.?\d*)', search_block)
-            if price_matches:
-                for pm in price_matches:
-                    try:
-                        price_local = float(pm.replace(",", ""))
-                        # Filter out unreasonable prices (< $10 or > $500)
-                        if 10 < price_local < 500:
-                            price_usd = round(price_local * fx, 2)
-                            if level not in prices or price_usd < prices[level]:
-                                prices[level] = price_usd
-                            break
-                    except ValueError:
-                        continue
-    
+
+    symbol = {"USD": "$", "GBP": "\xa3", "EUR": "\u20ac"}.get(currency, "$")
+    pattern = re.escape(symbol) + r'\s*([\d,]+\.?\d*)'
+
+    for match in re.finditer(pattern, text):
+        try:
+            price_local = float(match.group(1).replace(",", ""))
+            if price_local < 10 or price_local > 500:
+                continue
+            price_usd = round(price_local * fx, 2)
+
+            start = max(0, match.start() - 150)
+            end = min(len(text), match.end() + 50)
+            context = text[start:end].upper()
+            level = categorize_session(context)
+
+            if level and (level not in prices or price_usd < prices[level]):
+                prices[level] = price_usd
+        except ValueError:
+            continue
+
     return prices
 
 
 def categorize_session(name):
-    """
-    Given a session name/title, categorize it as beginner, intermediate, or advanced.
-    Returns None if it doesn't match a known category.
-    """
+    """Determine if a session name is beginner, intermediate, or advanced."""
     name = name.upper()
-    
-    # Skip non-surf items
+
     skip_words = ["GIFT", "VOUCHER", "MERCH", "CABANA", "BEACH PASS", "LODGING",
-                  "ACCOMMODATION", "LESSON", "COACHING", "CAMP", "ADAPTIVE",
-                  "BODYBOARD", "BOOGIE", "SPECTATOR", "WETSUIT", "RENTAL"]
+                  "ACCOMMODATION", "LESSON ONLY", "COACHING ONLY", "CAMP", "ADAPTIVE",
+                  "BODYBOARD", "BOOGIE", "SPECTATOR", "WETSUIT", "RENTAL",
+                  "VISITOR", "PARKING", "LOCKER", "MEMBERSHIP", "PACKAGE"]
     if any(w in name for w in skip_words):
         return None
-    
-    # Advanced/Expert/Pro
-    if any(w in name for w in ["ADVANCED", "EXPERT", "PRO ", "PRO BARREL", 
+
+    if any(w in name for w in ["ADVANCED", "EXPERT", "PRO ", "PRO BARREL",
                                 "HIGH PERFORMANCE", "BARREL", "MANOEUVRE",
-                                "TURNS 3", "TURNS 2"]):
+                                "TURNS 3", "TURNS 2", "V-LAND", "VLAND",
+                                "LOWERS", "RADICAL", "TUBE", "SLAB",
+                                "LEVEL 3", "LEVEL III"]):
         return "advanced"
-    
-    # Intermediate
+
     if any(w in name for w in ["INTERMEDIATE", "PROGRESSIVE", "CRUISER",
-                                "TURNS ", "NOVICE", "IMPROVER"]):
+                                "TURNS ", "NOVICE", "IMPROVER", "SAN O",
+                                "MALIBU", "THE BU", "A-FRAME", "AFRAME",
+                                "LEVEL 2", "LEVEL II"]):
         return "intermediate"
-    
-    # Beginner
+
     if any(w in name for w in ["BEGINNER", "LEARN TO SURF", "FIRST WAVE",
-                                "INTRO", "STARTER"]):
+                                "INTRO", "STARTER", "FIRST-TIMER", "FIRSTTIMER",
+                                "ROOKIE", "WHITEWATER", "WHITE WATER",
+                                "LEVEL 1", "LEVEL I ", "KIDS"]):
         return "beginner"
-    
+
     return None
 
 
@@ -327,61 +413,73 @@ def categorize_session(name):
 
 def scrape_park(park):
     """
-    Scrape a single park's booking page and return extracted prices.
-    
-    Returns:
-        dict: {"beginner": price, "intermediate": price, "advanced": price}
-        or empty dict if scraping failed
+    Scrape a single park. Returns (prices_dict, source_type).
+    source_type: "scraped", "published", "mixed", or "failed"
     """
     print(f"  Scraping {park['name']}...")
-    
+
+    scraped_prices = {}
     try:
         response = requests.get(park["url"], headers=HEADERS, timeout=15)
         response.raise_for_status()
         html = response.text
-        
-        # Route to the correct parser
-        parser_name = park.get("parser", "generic_price_scan")
+
         parser_func = {
             "wave7": parse_wave7,
             "waco": parse_waco,
+            "revel": parse_revel,
+            "palmsprings": parse_palmsprings,
+            "skudin": parse_skudin,
             "thewave": parse_thewave,
+            "surftown": parse_surftown,
             "generic_price_scan": parse_generic_price_scan,
-        }.get(parser_name, parse_generic_price_scan)
-        
-        prices = parser_func(html, park["currency"])
-        
-        if prices:
-            print(f"    ✓ Found {len(prices)} price levels: {prices}")
-        else:
-            print(f"    ⚠ No prices extracted (page structure may have changed)")
-        
-        return prices
-        
+        }.get(park.get("parser", "generic_price_scan"), parse_generic_price_scan)
+
+        scraped_prices = parser_func(html, park["currency"])
+
+        if scraped_prices and len(scraped_prices) >= 2:
+            print(f"    >>> LIVE: {scraped_prices}")
+            return scraped_prices, "scraped"
+        elif scraped_prices:
+            print(f"    ~ Partial scrape: {scraped_prices}")
+
     except requests.exceptions.RequestException as e:
-        print(f"    ✗ Request failed: {e}")
-        return {}
+        print(f"    ! Request failed: {e}")
     except Exception as e:
-        print(f"    ✗ Parse error: {e}")
-        return {}
+        print(f"    ! Parse error: {e}")
+
+    # Fall back to known prices
+    known = park.get("known_prices")
+    if known:
+        final_prices = dict(known)
+        if scraped_prices:
+            for level, price in scraped_prices.items():
+                if 10 < price < 500:
+                    final_prices[level] = price
+        source = "mixed" if scraped_prices else "published"
+        print(f"    >>> KNOWN: {final_prices} ({park.get('price_source', 'published')})")
+        return final_prices, source
+
+    if scraped_prices:
+        return scraped_prices, "scraped"
+
+    print(f"    >>> FAILED: No data")
+    return {}, "failed"
 
 
 def scrape_all():
-    """
-    Scrape all parks and return a list of results.
-    """
+    """Scrape all parks and return results."""
     timestamp = datetime.now(timezone.utc).isoformat()
     results = []
-    
+
     print(f"\n{'='*60}")
-    print(f"SURF PARK PRICE SCRAPE — {timestamp}")
+    print(f"SURF PARK PRICE SCRAPE v2.0 — {timestamp}")
     print(f"{'='*60}\n")
-    
+
     for park in PARKS:
-        prices = scrape_park(park)
-        
+        prices, source = scrape_park(park)
         if prices:
-            result = {
+            results.append({
                 "park_id": park["id"],
                 "park_name": park["name"],
                 "location": park["location"],
@@ -389,79 +487,70 @@ def scrape_all():
                 "timestamp": timestamp,
                 "prices_usd": prices,
                 "source_url": park["url"],
-            }
-            results.append(result)
-    
+                "source_type": source,
+            })
+
+    scraped = sum(1 for r in results if r["source_type"] == "scraped")
+    published = sum(1 for r in results if r["source_type"] in ("published", "mixed"))
+
     print(f"\n{'='*60}")
-    print(f"COMPLETE: {len(results)}/{len(PARKS)} parks scraped successfully")
+    print(f"COMPLETE: {len(results)}/{len(PARKS)} parks | {scraped} live, {published} published")
     print(f"{'='*60}\n")
-    
+
     return results
 
 
 # ─── DATA STORAGE ─────────────────────────────────────────────────
 
 def load_history():
-    """Load existing price history from JSON file."""
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r") as f:
             return json.load(f)
-    return {"scrapes": [], "metadata": {"created": datetime.now(timezone.utc).isoformat()}}
+    return {
+        "scrapes": [],
+        "metadata": {
+            "created": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "project": "Wavegarden Myrtle Beach \u2014 Comp Pricing Tracker",
+            "parks_tracked": len(PARKS),
+        }
+    }
 
 
 def save_history(history):
-    """Save price history to JSON file."""
     history["metadata"]["last_updated"] = datetime.now(timezone.utc).isoformat()
     history["metadata"]["total_scrapes"] = len(history["scrapes"])
-    
     with open(HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2)
-    
     print(f"Saved to {HISTORY_FILE} ({len(history['scrapes'])} total records)")
 
 
 def compute_running_averages(history):
-    """
-    Compute running averages from the price history.
-    Returns a summary dict that the dashboard can consume.
-    
-    This is the key function that turns raw scrapes into the
-    "running annual average" you want to track over time.
-    """
     parks = {}
-    
     for scrape in history.get("scrapes", []):
         pid = scrape["park_id"]
         if pid not in parks:
             parks[pid] = {
-                "park_id": pid,
-                "park_name": scrape["park_name"],
-                "location": scrape["location"],
-                "tech": scrape["tech"],
-                "scrape_count": 0,
-                "first_scrape": scrape["timestamp"],
+                "park_id": pid, "park_name": scrape["park_name"],
+                "location": scrape["location"], "tech": scrape["tech"],
+                "scrape_count": 0, "first_scrape": scrape["timestamp"],
                 "last_scrape": scrape["timestamp"],
                 "prices": {"beginner": [], "intermediate": [], "advanced": []},
-                "monthly": {},  # month_key -> {beginner: [], intermediate: [], advanced: []}
+                "monthly": {}, "source_types": [],
             }
-        
         park = parks[pid]
         park["scrape_count"] += 1
         park["last_scrape"] = scrape["timestamp"]
-        
-        # Collect prices by level
+        park["source_types"].append(scrape.get("source_type", "unknown"))
+
         for level in ["beginner", "intermediate", "advanced"]:
             if level in scrape.get("prices_usd", {}):
                 price = scrape["prices_usd"][level]
                 park["prices"][level].append(price)
-                
-                # Also bucket by month for monthly trend tracking
-                month_key = scrape["timestamp"][:7]  # "2026-02"
-                if month_key not in park["monthly"]:
-                    park["monthly"][month_key] = {"beginner": [], "intermediate": [], "advanced": []}
-                park["monthly"][month_key][level].append(price)
-    
-    # Compute averages
+                mk = scrape["timestamp"][:7]
+                if mk not in park["monthly"]:
+                    park["monthly"][mk] = {"beginner": [], "intermediate": [], "advanced": []}
+                park["monthly"][mk][level].append(price)
+
     summary = {}
     for pid, park in parks.items():
         avg = {}
@@ -471,67 +560,52 @@ def compute_running_averages(history):
                 avg[level] = {
                     "current": values[-1],
                     "running_avg": round(sum(values) / len(values), 2),
-                    "min": min(values),
-                    "max": max(values),
+                    "min": min(values), "max": max(values),
                     "data_points": len(values),
                 }
-        
-        # Monthly averages
         monthly_avgs = {}
-        for month_key, month_data in sorted(park["monthly"].items()):
-            monthly_avgs[month_key] = {}
+        for mk, md in sorted(park["monthly"].items()):
+            monthly_avgs[mk] = {}
             for level in ["beginner", "intermediate", "advanced"]:
-                vals = month_data[level]
+                vals = md[level]
                 if vals:
-                    monthly_avgs[month_key][level] = round(sum(vals) / len(vals), 2)
-        
+                    monthly_avgs[mk][level] = round(sum(vals) / len(vals), 2)
+
+        src_counts = {}
+        for s in park["source_types"]:
+            src_counts[s] = src_counts.get(s, 0) + 1
+
         summary[pid] = {
-            "park_id": pid,
-            "park_name": park["park_name"],
-            "location": park["location"],
-            "tech": park["tech"],
+            "park_id": pid, "park_name": park["park_name"],
+            "location": park["location"], "tech": park["tech"],
             "scrape_count": park["scrape_count"],
-            "first_scrape": park["first_scrape"],
-            "last_scrape": park["last_scrape"],
-            "averages": avg,
-            "monthly_averages": monthly_avgs,
+            "first_scrape": park["first_scrape"], "last_scrape": park["last_scrape"],
+            "averages": avg, "monthly_averages": monthly_avgs,
+            "source_breakdown": src_counts,
         }
-    
     return summary
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────
 
 def main():
-    # 1. Run the scrape
     new_results = scrape_all()
-    
-    # 2. Load existing history
     history = load_history()
-    
-    # 3. Append new results
     history["scrapes"].extend(new_results)
-    
-    # 4. Save updated history
     save_history(history)
-    
-    # 5. Compute and save running averages (for the dashboard)
+
     averages = compute_running_averages(history)
-    
-    averages_file = "price_averages.json"
-    with open(averages_file, "w") as f:
+    with open("price_averages.json", "w") as f:
         json.dump(averages, f, indent=2)
-    print(f"Running averages saved to {averages_file}")
-    
-    # 6. Print summary
-    print(f"\n{'─'*60}")
-    print("RUNNING AVERAGES SUMMARY")
-    print(f"{'─'*60}")
+    print(f"Running averages saved to price_averages.json")
+
+    print(f"\n{'~'*60}")
+    print("SUMMARY")
+    print(f"{'~'*60}")
     for pid, data in averages.items():
         print(f"\n{data['park_name']} ({data['location']})")
-        print(f"  Scrapes: {data['scrape_count']} | First: {data['first_scrape'][:10]} | Last: {data['last_scrape'][:10]}")
         for level, stats in data["averages"].items():
-            print(f"  {level:15s}  Current: ${stats['current']:>7.2f}  Avg: ${stats['running_avg']:>7.2f}  Range: ${stats['min']:.0f}–${stats['max']:.0f}  ({stats['data_points']} pts)")
+            print(f"  {level:15s}  ${stats['current']:>7.2f}  (avg ${stats['running_avg']:>7.2f})")
 
 
 if __name__ == "__main__":
