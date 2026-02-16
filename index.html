@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wavegarden Myrtle Beach — Comp Pricing Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(165deg, #06060f 0%, #0b0b18 35%, #080812 100%);
+      color: #fff; min-height: 100vh; padding: 26px 22px 40px;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    /* KPI Cards */
+    .kpi-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; animation: fadeUp 0.6s ease; }
+    .kpi { background: rgba(255,255,255,0.028); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 22px; flex: 1; min-width: 155px; }
+    .kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 8px; }
+    .kpi-value { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 6px; }
+
+    /* Cards */
+    .card { background: rgba(255,255,255,0.022); border: 1px solid rgba(255,255,255,0.055); border-radius: 14px; padding: 22px 20px 16px; }
+    .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .card-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+    .card-tag { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #4ECDC4; background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.2); border-radius: 5px; padding: 3px 8px; text-transform: uppercase; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* Controls */
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; animation: fadeUp 0.7s ease; }
+    .pill { padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 11px; font-weight: 600; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: rgba(255,255,255,0.35); transition: all 0.2s; text-transform: capitalize; }
+    .pill.active { border-color: #4ECDC4; background: rgba(78,205,196,0.1); color: #4ECDC4; }
+    .park-pill { padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600; transition: all 0.2s; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 6px 8px; color: rgba(255,255,255,0.25); font-weight: 700; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid rgba(255,255,255,0.06); white-space: nowrap; }
+    td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .live-tag { font-size: 9px; color: #4ECDC4; background: rgba(78,205,196,0.1); padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .est-tag { font-size: 9px; color: rgba(255,255,255,0.25); }
+
+    /* Bars */
+    .bar-chart { display: flex; gap: 5px; align-items: flex-end; padding-top: 8px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+    .bar-val { font-size: 12px; font-weight: 800; margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+    .bar-block { width: 100%; max-width: 46px; border-radius: 5px 5px 0 0; transition: height 0.4s ease; }
+    .bar-label { font-size: 8px; color: rgba(255,255,255,0.35); margin-top: 4px; text-align: center; line-height: 1.2; font-weight: 600; }
+
+    /* Insight box */
+    .insight { margin-top: 12px; padding: 10px 12px; background: rgba(78,205,196,0.04); border: 1px solid rgba(78,205,196,0.1); border-radius: 8px; font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+    .insight b { color: #4ECDC4; font-weight: 700; }
+    .insight .target { color: #fff; font-weight: 700; }
+
+    .footer { text-align: center; margin-top: 22px; font-size: 10px; color: rgba(255,255,255,0.15); line-height: 1.8; }
+
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 3px; margin-right: 6px; }
+    .loading { text-align: center; padding: 60px; font-size: 16px; color: rgba(255,255,255,0.4); }
+    .loading .spinner { display: inline-block; width: 6px; height: 6px; border-radius: 3px; background: #4ECDC4; animation: pulse 1s infinite; margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading"><span class="spinner"></span>Loading price data from GitHub...</div>
+</div>
+
+<script>
+// ─── PARK DEFINITIONS ────────────────────────────────────────────
+const PARKS = [
+  { id:"atlantic", short:"Atlantic Park", loc:"Virginia Beach, VA", tech:"Wavegarden Cove", year:2025, color:"#4ECDC4", beg:[103,104], int:[109,118], adv:[123,143] },
+  { id:"lostshore", short:"Lost Shore", loc:"Edinburgh, UK", tech:"Wavegarden Cove", year:2024, color:"#10B981", beg:[57,57], int:[63,76], adv:[76,89] },
+  { id:"waco", short:"Waco", loc:"Waco, TX", tech:"PerfectSwell (AWM)", year:2018, color:"#FF6B6B", beg:[75,129], int:[129,161], adv:[149,172] },
+  { id:"revel", short:"Revel", loc:"Mesa, AZ", tech:"SwellMFG + UNIT", year:2025, color:"#FFE66D", beg:[89,109], int:[119,129], adv:[119,139] },
+  { id:"palmsprings", short:"Palm Springs", loc:"Palm Springs, CA", tech:"Surf Loch", year:2024, color:"#A78BFA", beg:[100,112], int:[150,162], adv:[200,250] },
+  { id:"skudin", short:"SkudinSurf", loc:"East Rutherford, NJ", tech:"PerfectSwell (AWM)", year:2023, color:"#F97316", beg:[79,90], int:[90,100], adv:[95,112] },
+  { id:"thewave", short:"The Wave", loc:"Bristol, UK", tech:"Wavegarden Cove", year:2019, color:"#06B6D4", beg:[50,70], int:[50,63], adv:[50,79] },
+  { id:"surftown", short:"SURFTOWN", loc:"Munich, DE", tech:"Endless Surf", year:2024, color:"#EC4899", beg:[65,76], int:[97,108], adv:[141,162] },
+];
+
+const PM = Object.fromEntries(PARKS.map(p => [p.id, p]));
+
+// ─── LOAD DATA FROM GITHUB REPO ─────────────────────────────────
+// This fetches price_history.json from your GitHub repo automatically.
+// Replace this URL with your actual GitHub raw URL:
+const DATA_URL = "https://raw.githubusercontent.com/bgraboff-hue/surf-park-tracker/main/price_history.json";
+
+let scrapeData = [];
+let currentLevel = "intermediate";
+
+async function loadData() {
+  try {
+    const resp = await fetch(DATA_URL);
+    const json = await resp.json();
+    scrapeData = json.scrapes || [];
+    render();
+  } catch (e) {
+    document.getElementById("app").innerHTML = `
+      <div class="loading" style="color:#FF6B6B">
+        Could not load price data. Make sure the repo is public or check the URL.<br>
+        <span style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px;display:block">Error: ${e.message}</span>
+      </div>`;
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────
+function getLatestScrape(parkId) {
+  const parkScrapes = scrapeData.filter(s => s.park_id === parkId);
+  return parkScrapes.length > 0 ? parkScrapes[parkScrapes.length - 1] : null;
+}
+
+function getLivePrice(parkId, level) {
+  const s = getLatestScrape(parkId);
+  return s?.prices_usd?.[level] ?? null;
+}
+
+function getBaseline(parkId, level) {
+  const p = PM[parkId];
+  if (!p) return null;
+  const r = level === "beginner" ? p.beg : level === "intermediate" ? p.int : p.adv;
+  return r ? Math.round((r[0] + r[1]) / 2) : null;
+}
+
+function getPrice(parkId, level) {
+  return getLivePrice(parkId, level) ?? getBaseline(parkId, level);
+}
+
+function isLive(parkId) {
+  const s = getLatestScrape(parkId);
+  return s && Object.keys(s.prices_usd || {}).length > 0;
+}
+
+function getRunningAvg(parkId, level) {
+  const vals = scrapeData
+    .filter(s => s.park_id === parkId && s.prices_usd?.[level])
+    .map(s => s.prices_usd[level]);
+  return vals.length > 0 ? Math.round(vals.reduce((a,b) => a+b, 0) / vals.length) : null;
+}
+
+function getAllHistoricalMonths() {
+  const months = {};
+  scrapeData.forEach(s => {
+    const mk = s.timestamp?.substring(0, 7);
+    if (!mk) return;
+    if (!months[mk]) months[mk] = {};
+    const pid = s.park_id;
+    if (!months[mk][pid]) months[mk][pid] = {};
+    Object.entries(s.prices_usd || {}).forEach(([level, price]) => {
+      if (!months[mk][pid][level]) months[mk][pid][level] = [];
+      months[mk][pid][level].push(price);
+    });
+  });
+  return months;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────
+function render() {
+  const level = currentLevel;
+  const prices = {};
+  PARKS.forEach(p => { prices[p.id] = getPrice(p.id, level); });
+
+  const allVals = Object.values(prices).filter(Boolean);
+  const cheapest = Math.min(...allVals);
+  const expensive = Math.max(...allVals);
+  const mktAvg = Math.round(allVals.reduce((a,b) => a+b, 0) / allVals.length);
+
+  const cheapPark = PARKS.find(p => prices[p.id] === cheapest);
+  const expPark = PARKS.find(p => prices[p.id] === expensive);
+
+  const wavegarden = PARKS.filter(p => p.tech.includes("Wavegarden"));
+  const wgAvg = Math.round(wavegarden.reduce((s,p) => s + (prices[p.id]||0), 0) / wavegarden.length);
+
+  const liveCount = PARKS.filter(p => isLive(p.id)).length;
+  const totalScrapes = scrapeData.length;
+  const lastScrape = scrapeData.length > 0 ? scrapeData[scrapeData.length - 1].timestamp?.substring(0,16).replace("T"," ") : "—";
+  const firstScrape = scrapeData.length > 0 ? scrapeData[0].timestamp?.substring(0,10) : "—";
+
+  // Unique dates
+  const uniqueDates = [...new Set(scrapeData.map(s => s.timestamp?.substring(0,10)))];
+
+  // Bar data sorted
+  const barSorted = PARKS.map(p => ({ ...p, price: prices[p.id] || 0, live: isLive(p.id) })).sort((a,b) => a.price - b.price);
+  const maxBar = Math.max(...barSorted.map(b => b.price));
+
+  // Annual blended
+  const blended = PARKS.map(p => {
+    const vals = ["beginner","intermediate","advanced"].map(l => getPrice(p.id, l)).filter(Boolean);
+    return { ...p, val: vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0, live: isLive(p.id) };
+  }).sort((a,b) => a.val - b.val);
+  const maxBlend = Math.max(...blended.map(b => b.val));
+
+  document.getElementById("app").innerHTML = `
+    <!-- HEADER -->
+    <div style="margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;animation:fadeUp 0.5s ease">
+      <div>
+        <h1 style="font-size:25px;font-weight:800;letter-spacing:-0.5px;line-height:1.2">
+          <span style="color:#4ECDC4">Wavegarden</span> Myrtle Beach
+          <span style="color:rgba(255,255,255,0.25);font-weight:400;font-size:20px"> — Pricing Comps</span>
+        </h1>
+        <p class="mono" style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:5px">
+          ${liveCount} parks live-scraping · ${PARKS.length - liveCount} baseline · ${uniqueDates.length} scrape days since ${firstScrape}
+        </p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="mono" style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.18);border-radius:8px;padding:5px 11px;font-size:10px;color:#4ECDC4;font-weight:600;display:flex;align-items:center;gap:6px">
+          <span style="width:5px;height:5px;border-radius:3px;background:#4ECDC4;animation:pulse 2s infinite;display:inline-block"></span>LIVE
+        </div>
+        <div class="mono" style="font-size:10px;color:rgba(255,255,255,0.2)">Last: ${lastScrape} UTC</div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label mono">Cheapest</div>
+        <div class="kpi-value" style="color:#4ECDC4">$${cheapest}</div>
+        <div class="kpi-sub">${cheapPark?.short} · ${level}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label mono">Most Expensive</div>
+        <div class="kpi-value" style="color:#FF6B6B">$${expensive}</div>
+        <div class="kpi-sub">${expPark?.short} · ${level}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label mono">Market Average</div>
+        <div class="kpi-value" style="color:#A78BFA">$${mktAvg}</div>
+        <div class="kpi-sub">${PARKS.length} parks</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label mono">Wavegarden Avg</div>
+        <div class="kpi-value" style="color:#FFE66D">$${wgAvg}</div>
+        <div class="kpi-sub">${wavegarden.length} Cove parks</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label mono">Scrape History</div>
+        <div class="kpi-value">${uniqueDates.length}</div>
+        <div class="kpi-sub">days tracked</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <div style="display:flex;gap:4px">
+        ${["beginner","intermediate","advanced"].map(l => `
+          <button class="pill ${level===l?'active':''}" onclick="currentLevel='${l}';render()">${l}</button>
+        `).join("")}
+      </div>
+      <div style="width:1px;height:18px;background:rgba(255,255,255,0.06)"></div>
+      <div class="mono" style="font-size:10px;color:rgba(255,255,255,0.2)">
+        ● = live scraped &nbsp; ○ = baseline estimate
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="grid-2">
+      <!-- Price Comparison Bars -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div class="card-title">Price Comparison</div>
+            <div class="card-sub">${level} — current price per session (USD)</div>
+          </div>
+          <span class="card-tag">Live + Baseline</span>
+        </div>
+        <div style="space-y:8px">
+          ${barSorted.map(p => `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="width:85px;font-size:11px;font-weight:600;color:${p.color};text-align:right;white-space:nowrap">
+                <span class="dot" style="background:${p.color}"></span>${p.short}
+              </div>
+              <div style="flex:1;height:24px;background:rgba(255,255,255,0.03);border-radius:4px;position:relative;overflow:hidden">
+                <div style="height:100%;width:${(p.price/maxBar)*100}%;background:${p.live ? p.color+'99' : 'rgba(255,255,255,0.08)'};border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width 0.4s">
+                  <span style="font-size:11px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">${p.price ? '$'+p.price : '—'}</span>
+                </div>
+              </div>
+              <div style="width:35px;text-align:center">
+                ${p.live ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">EST</span>'}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Annual Blended -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div class="card-title">Annual Blended Average</div>
+            <div class="card-sub">Avg across all levels — overall market positioning</div>
+          </div>
+        </div>
+        <div class="bar-chart" style="height:210px">
+          ${blended.map(d => `
+            <div class="bar-col" style="height:100%">
+              <span class="bar-val">$${d.val}</span>
+              <div class="bar-block" style="height:${Math.max(12,(d.val/maxBlend)*145)}px;background:${d.live ? 'linear-gradient(180deg,'+d.color+','+d.color+'44)' : 'linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))'}${d.live?'':';border:1px solid rgba(255,255,255,0.06);border-bottom:none'}"></div>
+              <span class="bar-label" style="color:${d.live?'rgba(255,255,255,0.4)':'rgba(255,255,255,0.2)'}">${d.short}</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="mono" style="font-size:9px;color:rgba(255,255,255,0.2);margin-top:10px">
+          Colored = live data · Gray = baseline estimates
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="grid-2">
+      <!-- Wavegarden Peers -->
+      <div class="card">
+        <div style="margin-bottom:16px">
+          <div class="card-title">Wavegarden Cove Direct Comps</div>
+          <div class="card-sub">Same technology as Myrtle Beach</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th class="mono">Park</th><th class="mono">Status</th><th class="mono">Beginner</th><th class="mono">Intermed.</th><th class="mono">Advanced</th>
+          </tr></thead>
+          <tbody>
+            ${wavegarden.map(p => `
+              <tr>
+                <td style="font-weight:700;color:${p.color}"><span class="dot" style="background:${p.color}"></span>${p.short}</td>
+                <td>${isLive(p.id) ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">EST</span>'}</td>
+                <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'beginner') ? '$'+getPrice(p.id,'beginner') : '—'}</td>
+                <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'intermediate') ? '$'+getPrice(p.id,'intermediate') : '—'}</td>
+                <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'advanced') ? '$'+getPrice(p.id,'advanced') : '—'}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <div class="insight">
+          <b>Myrtle Beach Target:</b> Based on Cove peer data, <span class="target">${level}</span> sessions →
+          <span class="target">$${Math.round(wgAvg*0.9)}–$${Math.round(wgAvg*1.1)}</span>
+          for competitive East Coast resort positioning.
+        </div>
+      </div>
+
+      <!-- Scrape History Summary -->
+      <div class="card">
+        <div style="margin-bottom:16px">
+          <div class="card-title">Scrape History & Running Averages</div>
+          <div class="card-sub">${level} level — data accumulates with each daily scrape</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th class="mono">Park</th><th class="mono">Latest</th><th class="mono">Run. Avg</th><th class="mono">Scrapes</th>
+          </tr></thead>
+          <tbody>
+            ${PARKS.filter(p => isLive(p.id)).map(p => {
+              const avg = getRunningAvg(p.id, level);
+              const latest = getLivePrice(p.id, level);
+              const count = scrapeData.filter(s => s.park_id === p.id && s.prices_usd?.[level]).length;
+              return `
+                <tr>
+                  <td style="font-weight:700;color:${p.color}"><span class="dot" style="background:${p.color}"></span>${p.short}</td>
+                  <td style="color:#fff;font-weight:700;font-variant-numeric:tabular-nums">${latest ? '$'+latest : '—'}</td>
+                  <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${avg ? '$'+avg : '—'}</td>
+                  <td style="color:rgba(255,255,255,0.35)">${count}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+        ${PARKS.filter(p => isLive(p.id)).length === 0 ? '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.2);font-size:12px">No live data yet — run the scraper from GitHub Actions</div>' : ''}
+        <div class="insight" style="margin-top:16px">
+          <b>How this grows:</b> Each daily scrape adds data points. After 30 days you'll see monthly trends.
+          After 12 months you'll have a full annual pricing cycle — data no one else in the industry has.
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL TABLE -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="margin-bottom:16px">
+        <div class="card-title">Full Comp Set</div>
+        <div class="card-sub">All 8 tracked parks — live prices, technology, and status</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th class="mono">Park</th><th class="mono">Location</th><th class="mono">Technology</th>
+            <th class="mono">Status</th><th class="mono">Beginner</th><th class="mono">Intermediate</th>
+            <th class="mono">Advanced</th><th class="mono">Opened</th>
+          </tr></thead>
+          <tbody>
+            ${PARKS.map(p => `
+              <tr>
+                <td style="font-weight:700;color:${p.color};white-space:nowrap"><span class="dot" style="background:${p.color}"></span>${p.short}</td>
+                <td style="color:rgba(255,255,255,0.4)">${p.loc}</td>
+                <td style="color:rgba(255,255,255,0.35);font-size:11px">${p.tech}</td>
+                <td>${isLive(p.id) ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">Baseline</span>'}</td>
+                <td style="color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums">${getPrice(p.id,'beginner') ? '$'+getPrice(p.id,'beginner') : '—'}</td>
+                <td style="color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;${level==='intermediate'?'font-weight:700':''}">
+                  ${getPrice(p.id,'intermediate') ? '$'+getPrice(p.id,'intermediate') : '—'}
+                </td>
+                <td style="color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;${level==='advanced'?'font-weight:700':''}">
+                  ${getPrice(p.id,'advanced') ? '$'+getPrice(p.id,'advanced') : '—'}
+                </td>
+                <td style="color:rgba(255,255,255,0.25)">${p.year}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer mono">
+      Data scraped from public booking pages via GitHub Actions · Foreign currencies converted at approximate rates
+      <br>${liveCount} parks live-scraping · ${PARKS.length - liveCount} parks on baseline estimates
+      <br>Built for Wavegarden Myrtle Beach feasibility analysis
+      <br><span style="color:rgba(78,205,196,0.3)">●</span> Auto-scrape runs daily at 06:00 UTC
+    </div>
+  `;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
