@@ -74,14 +74,14 @@
 <script>
 // ─── PARK DEFINITIONS ────────────────────────────────────────────
 const PARKS = [
-  { id:"atlantic", short:"Atlantic Park", loc:"Virginia Beach, VA", tech:"Wavegarden Cove", year:2025, color:"#4ECDC4", beg:[103,104], int:[109,118], adv:[123,143] },
-  { id:"lostshore", short:"Lost Shore", loc:"Edinburgh, UK", tech:"Wavegarden Cove", year:2024, color:"#10B981", beg:[57,57], int:[63,76], adv:[76,89] },
-  { id:"waco", short:"Waco", loc:"Waco, TX", tech:"PerfectSwell (AWM)", year:2018, color:"#FF6B6B", beg:[75,129], int:[129,161], adv:[149,172] },
-  { id:"revel", short:"Revel", loc:"Mesa, AZ", tech:"SwellMFG + UNIT", year:2025, color:"#FFE66D", beg:[89,109], int:[119,129], adv:[119,139] },
-  { id:"palmsprings", short:"Palm Springs", loc:"Palm Springs, CA", tech:"Surf Loch", year:2024, color:"#A78BFA", beg:[100,112], int:[150,162], adv:[200,250] },
-  { id:"skudin", short:"SkudinSurf", loc:"East Rutherford, NJ", tech:"PerfectSwell (AWM)", year:2023, color:"#F97316", beg:[79,90], int:[90,100], adv:[95,112] },
-  { id:"thewave", short:"The Wave", loc:"Bristol, UK", tech:"Wavegarden Cove", year:2019, color:"#06B6D4", beg:[50,70], int:[50,63], adv:[50,79] },
-  { id:"surftown", short:"SURFTOWN", loc:"Munich, DE", tech:"Endless Surf", year:2024, color:"#EC4899", beg:[65,76], int:[97,108], adv:[141,162] },
+  { id:"atlantic", short:"Atlantic Park", loc:"Virginia Beach, VA", tech:"Wavegarden Cove", year:2025, color:"#4ECDC4", beg:[103,104], int:[109,118], adv:[123,143], src:"https://booking.atlanticparksurf.com/store" },
+  { id:"lostshore", short:"Lost Shore", loc:"Edinburgh, UK", tech:"Wavegarden Cove", year:2024, color:"#10B981", beg:[57,57], int:[63,76], adv:[76,89], src:"https://booking.lostshore.com/surf-sessions" },
+  { id:"waco", short:"Waco", loc:"Waco, TX", tech:"PerfectSwell (AWM)", year:2018, color:"#FF6B6B", beg:[75,129], int:[129,161], adv:[149,172], src:"https://www.wacosurf.com/surf-center/" },
+  { id:"revel", short:"Revel", loc:"Mesa, AZ", tech:"SwellMFG + UNIT", year:2025, color:"#FFE66D", beg:[89,109], int:[119,129], adv:[119,139], src:"https://revelsurf.com/surf-lagoon/" },
+  { id:"palmsprings", short:"Palm Springs", loc:"Palm Springs, CA", tech:"Surf Loch", year:2024, color:"#A78BFA", beg:[100,112], int:[150,162], adv:[200,250], src:"https://palmspringssurfclub.com/surf/" },
+  { id:"skudin", short:"SkudinSurf", loc:"East Rutherford, NJ", tech:"PerfectSwell (AWM)", year:2023, color:"#F97316", beg:[79,90], int:[90,100], adv:[95,112], src:"https://skudinsurfamericandream.com/" },
+  { id:"thewave", short:"The Wave", loc:"Bristol, UK", tech:"Wavegarden Cove", year:2019, color:"#06B6D4", beg:[50,70], int:[50,63], adv:[50,79], src:"https://www.thewave.com/book-now/" },
+  { id:"surftown", short:"SURFTOWN", loc:"Munich, DE", tech:"Endless Surf", year:2024, color:"#EC4899", beg:[65,76], int:[97,108], adv:[141,162], src:"https://surftown.de/en/all-products" },
 ];
 
 const PM = Object.fromEntries(PARKS.map(p => [p.id, p]));
@@ -279,8 +279,8 @@ function render() {
                   <span style="font-size:11px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">${p.price ? '$'+p.price : '—'}</span>
                 </div>
               </div>
-              <div style="width:35px;text-align:center">
-                ${p.live ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">EST</span>'}
+              <div style="width:45px;text-align:center">
+                <a href="${PM[p.id]?.src||'#'}" target="_blank" rel="noopener" style="text-decoration:none">${p.live ? '<span class="live-tag" style="cursor:pointer">LIVE ↗</span>' : '<span class="est-tag" style="cursor:pointer">EST ↗</span>'}</a>
               </div>
             </div>
           `).join("")}
@@ -326,7 +326,7 @@ function render() {
             ${wavegarden.map(p => `
               <tr>
                 <td style="font-weight:700;color:${p.color}"><span class="dot" style="background:${p.color}"></span>${p.short}</td>
-                <td>${isLive(p.id) ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">EST</span>'}</td>
+                <td><a href="${p.src}" target="_blank" rel="noopener" style="text-decoration:none">${isLive(p.id) ? '<span class="live-tag" style="cursor:pointer">LIVE ↗</span>' : '<span class="est-tag" style="cursor:pointer">Source ↗</span>'}</a></td>
                 <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'beginner') ? '$'+getPrice(p.id,'beginner') : '—'}</td>
                 <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'intermediate') ? '$'+getPrice(p.id,'intermediate') : '—'}</td>
                 <td style="color:rgba(255,255,255,0.6);font-variant-numeric:tabular-nums">${getPrice(p.id,'advanced') ? '$'+getPrice(p.id,'advanced') : '—'}</td>
@@ -394,7 +394,7 @@ function render() {
                 <td style="font-weight:700;color:${p.color};white-space:nowrap"><span class="dot" style="background:${p.color}"></span>${p.short}</td>
                 <td style="color:rgba(255,255,255,0.4)">${p.loc}</td>
                 <td style="color:rgba(255,255,255,0.35);font-size:11px">${p.tech}</td>
-                <td>${isLive(p.id) ? '<span class="live-tag">LIVE</span>' : '<span class="est-tag">Baseline</span>'}</td>
+                <td><a href="${p.src}" target="_blank" rel="noopener" style="text-decoration:none">${isLive(p.id) ? '<span class="live-tag" style="cursor:pointer">LIVE ↗</span>' : '<span class="est-tag" style="cursor:pointer">Source ↗</span>'}</a></td>
                 <td style="color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums">${getPrice(p.id,'beginner') ? '$'+getPrice(p.id,'beginner') : '—'}</td>
                 <td style="color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;${level==='intermediate'?'font-weight:700':''}">
                   ${getPrice(p.id,'intermediate') ? '$'+getPrice(p.id,'intermediate') : '—'}
