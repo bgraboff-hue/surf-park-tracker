@@ -477,13 +477,123 @@
       },
       "source_url": "https://surftown.de/en/all-products",
       "source_type": "mixed"
+    },
+    {
+      "park_id": "atlantic",
+      "park_name": "Atlantic Park Surf",
+      "location": "Virginia Beach, VA",
+      "tech": "Wavegarden Cove",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 119.0,
+        "intermediate": 117.0
+      },
+      "source_url": "https://booking.atlanticparksurf.com/store",
+      "source_type": "scraped"
+    },
+    {
+      "park_id": "lostshore",
+      "park_name": "Lost Shore Surf Resort",
+      "location": "Edinburgh, UK",
+      "tech": "Wavegarden Cove",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "intermediate": 63.5,
+        "advanced": 76.2,
+        "beginner": 57.15
+      },
+      "source_url": "https://booking.lostshore.com/surf-sessions",
+      "source_type": "scraped"
+    },
+    {
+      "park_id": "waco",
+      "park_name": "Waco Surf",
+      "location": "Waco, TX",
+      "tech": "PerfectSwell (AWM)",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "intermediate": 129.0,
+        "advanced": 149.0
+      },
+      "source_url": "https://www.wacosurf.com/surf-center/",
+      "source_type": "scraped"
+    },
+    {
+      "park_id": "revel",
+      "park_name": "Revel Surf",
+      "location": "Mesa, AZ",
+      "tech": "SwellMFG + UNIT",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 119.0,
+        "intermediate": 129.0,
+        "advanced": 139.0
+      },
+      "source_url": "https://revelsurf.com/surf-lagoon/",
+      "source_type": "published"
+    },
+    {
+      "park_id": "palmsprings",
+      "park_name": "Palm Springs Surf Club",
+      "location": "Palm Springs, CA",
+      "tech": "Surf Loch",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 100.0,
+        "intermediate": 200.0,
+        "advanced": 200.0
+      },
+      "source_url": "https://palmspringssurfclub.com/surf/",
+      "source_type": "published"
+    },
+    {
+      "park_id": "skudin",
+      "park_name": "SkudinSurf American Dream",
+      "location": "East Rutherford, NJ",
+      "tech": "PerfectSwell (AWM)",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 99.0,
+        "intermediate": 145.0,
+        "advanced": 250.0
+      },
+      "source_url": "https://skudinsurfamericandream.com/intermediate-sessions/",
+      "source_type": "published"
+    },
+    {
+      "park_id": "thewave",
+      "park_name": "The Wave Bristol",
+      "location": "Bristol, UK",
+      "tech": "Wavegarden Cove",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 38.1,
+        "intermediate": 48.26,
+        "advanced": 48.26
+      },
+      "source_url": "https://www.thewave.com/book-now/",
+      "source_type": "scraped"
+    },
+    {
+      "park_id": "surftown",
+      "park_name": "O2 SURFTOWN MUC",
+      "location": "Munich, Germany",
+      "tech": "Endless Surf",
+      "timestamp": "2026-02-21T07:44:52.375878+00:00",
+      "prices_usd": {
+        "beginner": 86.11,
+        "intermediate": 97.01,
+        "advanced": 162.41
+      },
+      "source_url": "https://surftown.de/en/all-products",
+      "source_type": "mixed"
     }
   ],
   "metadata": {
     "created": "2026-02-16",
     "project": "Wavegarden Myrtle Beach \u2014 Comp Pricing Tracker",
     "parks_tracked": 8,
-    "last_updated": "2026-02-20T08:00:41.279918+00:00",
-    "total_scrapes": 35
+    "last_updated": "2026-02-21T07:44:56.042610+00:00",
+    "total_scrapes": 43
   }
 }
