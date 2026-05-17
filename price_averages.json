@@ -4,30 +4,30 @@
     "park_name": "Atlantic Park Surf",
     "location": "Virginia Beach, VA",
     "tech": "Wavegarden Cove",
-    "scrape_count": 88,
+    "scrape_count": 89,
     "first_scrape": "2026-02-16T18:34:10.968093+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 119.0,
         "running_avg": 119.0,
         "min": 119.0,
         "max": 119.0,
-        "data_points": 87
+        "data_points": 88
       },
       "intermediate": {
         "current": 117.0,
         "running_avg": 116.91,
         "min": 109.0,
         "max": 117.0,
-        "data_points": 88
+        "data_points": 89
       },
       "advanced": {
         "current": 133.0,
-        "running_avg": 132.87,
+        "running_avg": 132.88,
         "min": 123.0,
         "max": 133.0,
-        "data_points": 79
+        "data_points": 80
       }
     },
     "monthly_averages": {
@@ -54,7 +54,7 @@
     },
     "source_breakdown": {
       "unknown": 1,
-      "scraped": 87
+      "scraped": 88
     }
   },
   "lostshore": {
@@ -62,30 +62,30 @@
     "park_name": "Lost Shore Surf Resort",
     "location": "Edinburgh, UK",
     "tech": "Wavegarden Cove",
-    "scrape_count": 90,
+    "scrape_count": 91,
     "first_scrape": "2026-02-16T18:34:10.968093+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 57.15,
         "running_avg": 57.15,
         "min": 57.15,
         "max": 57.15,
-        "data_points": 90
+        "data_points": 91
       },
       "intermediate": {
         "current": 63.5,
         "running_avg": 63.5,
         "min": 63.5,
         "max": 63.5,
-        "data_points": 90
+        "data_points": 91
       },
       "advanced": {
         "current": 76.2,
         "running_avg": 76.2,
         "min": 76.2,
         "max": 76.2,
-        "data_points": 90
+        "data_points": 91
       }
     },
     "monthly_averages": {
@@ -112,7 +112,7 @@
     },
     "source_breakdown": {
       "unknown": 1,
-      "scraped": 89
+      "scraped": 90
     }
   },
   "waco": {
@@ -120,30 +120,30 @@
     "park_name": "Waco Surf",
     "location": "Waco, TX",
     "tech": "PerfectSwell (AWM)",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-16T18:34:10.968093+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 75.0,
-        "running_avg": 78.38,
+        "running_avg": 78.18,
         "min": 75.0,
         "max": 129.0,
-        "data_points": 16
+        "data_points": 17
       },
       "intermediate": {
         "current": 129.0,
         "running_avg": 129.0,
         "min": 129.0,
         "max": 129.0,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 149.0,
         "running_avg": 149.0,
         "min": 149.0,
         "max": 149.0,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -168,7 +168,7 @@
     },
     "source_breakdown": {
       "unknown": 1,
-      "scraped": 88
+      "scraped": 89
     }
   },
   "revel": {
@@ -176,30 +176,30 @@
     "park_name": "Revel Surf",
     "location": "Mesa, AZ",
     "tech": "SwellMFG + UNIT",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-17T08:04:02.559470+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 119.0,
         "running_avg": 119.0,
         "min": 119.0,
         "max": 119.0,
-        "data_points": 89
+        "data_points": 90
       },
       "intermediate": {
         "current": 129.0,
         "running_avg": 129.0,
         "min": 129.0,
         "max": 129.0,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 139.0,
         "running_avg": 139.0,
         "min": 139.0,
         "max": 139.0,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -225,7 +225,7 @@
       }
     },
     "source_breakdown": {
-      "published": 89
+      "published": 90
     }
   },
   "palmsprings": {
@@ -233,30 +233,30 @@
     "park_name": "Palm Springs Surf Club",
     "location": "Palm Springs, CA",
     "tech": "Surf Loch",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-17T08:04:02.559470+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 100.0,
         "running_avg": 100.0,
         "min": 100.0,
         "max": 100.0,
-        "data_points": 89
+        "data_points": 90
       },
       "intermediate": {
         "current": 200.0,
         "running_avg": 200.0,
         "min": 200.0,
         "max": 200.0,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 200.0,
         "running_avg": 200.0,
         "min": 200.0,
         "max": 200.0,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -282,7 +282,7 @@
       }
     },
     "source_breakdown": {
-      "published": 89
+      "published": 90
     }
   },
   "skudin": {
@@ -290,30 +290,30 @@
     "park_name": "SkudinSurf American Dream",
     "location": "East Rutherford, NJ",
     "tech": "PerfectSwell (AWM)",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-17T08:04:02.559470+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 99.0,
         "running_avg": 99.0,
         "min": 99.0,
         "max": 99.0,
-        "data_points": 89
+        "data_points": 90
       },
       "intermediate": {
         "current": 200.0,
-        "running_avg": 164.78,
+        "running_avg": 165.17,
         "min": 145.0,
         "max": 200.0,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 250.0,
         "running_avg": 250.0,
         "min": 250.0,
         "max": 250.0,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -340,7 +340,7 @@
     },
     "source_breakdown": {
       "published": 57,
-      "mixed": 32
+      "mixed": 33
     }
   },
   "thewave": {
@@ -348,30 +348,30 @@
     "park_name": "The Wave Bristol",
     "location": "Bristol, UK",
     "tech": "Wavegarden Cove",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-17T08:04:02.559470+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 49.53,
-        "running_avg": 43.88,
+        "running_avg": 43.94,
         "min": 38.1,
         "max": 49.53,
-        "data_points": 89
+        "data_points": 90
       },
       "intermediate": {
         "current": 63.5,
-        "running_avg": 55.97,
+        "running_avg": 56.05,
         "min": 48.26,
         "max": 63.5,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 63.5,
-        "running_avg": 55.97,
+        "running_avg": 56.05,
         "min": 48.26,
         "max": 63.5,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -397,7 +397,7 @@
       }
     },
     "source_breakdown": {
-      "scraped": 89
+      "scraped": 90
     }
   },
   "surftown": {
@@ -405,30 +405,30 @@
     "park_name": "O2 SURFTOWN MUC",
     "location": "Munich, Germany",
     "tech": "Endless Surf",
-    "scrape_count": 89,
+    "scrape_count": 90,
     "first_scrape": "2026-02-17T08:04:02.559470+00:00",
-    "last_scrape": "2026-05-16T08:07:31.758518+00:00",
+    "last_scrape": "2026-05-17T08:23:48.323848+00:00",
     "averages": {
       "beginner": {
         "current": 86.11,
         "running_avg": 86.11,
         "min": 86.11,
         "max": 86.11,
-        "data_points": 89
+        "data_points": 90
       },
       "intermediate": {
         "current": 97.01,
         "running_avg": 97.01,
         "min": 97.01,
         "max": 97.01,
-        "data_points": 89
+        "data_points": 90
       },
       "advanced": {
         "current": 162.41,
         "running_avg": 162.41,
         "min": 162.41,
         "max": 162.41,
-        "data_points": 89
+        "data_points": 90
       }
     },
     "monthly_averages": {
@@ -454,7 +454,7 @@
       }
     },
     "source_breakdown": {
-      "mixed": 89
+      "mixed": 90
     }
   }
 }
